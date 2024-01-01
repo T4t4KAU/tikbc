@@ -2,16 +2,15 @@ package resp
 
 import (
 	"github.com/T4t4KAU/tikbc/utils"
-	"io"
 )
 
 type GetRequest struct {
 	Key []byte
 }
 
-func MakeGetRequest(key []byte) *GetRequest {
+func MakeGetRequest(key string) *GetRequest {
 	return &GetRequest{
-		Key: key,
+		Key: utils.S2B(key),
 	}
 }
 
@@ -24,10 +23,10 @@ type SetRequest struct {
 	Value []byte
 }
 
-func MakeSetRequest(key, value []byte) *SetRequest {
+func MakeSetRequest(key, value string) *SetRequest {
 	return &SetRequest{
-		Key:   key,
-		Value: value,
+		Key:   utils.S2B(key),
+		Value: utils.S2B(value),
 	}
 }
 
@@ -39,9 +38,9 @@ type DelRequest struct {
 	Key []byte
 }
 
-func MakeDelRequest(key []byte) *DelRequest {
+func MakeDelRequest(key string) *DelRequest {
 	return &DelRequest{
-		Key: key,
+		Key: utils.S2B(key),
 	}
 }
 
@@ -49,26 +48,14 @@ func (req *DelRequest) ToBytes() []byte {
 	return MakeMultiBulkReply([][]byte{[]byte("DEL"), req.Key}).ToBytes()
 }
 
-func writeGetRequest(writer io.Writer, key []byte) (int, error) {
-	return writer.Write(MakeGetRequest(key).ToBytes())
-}
-
-func writeSetRequest(writer io.Writer, key []byte, value []byte) (int, error) {
-	return writer.Write(MakeSetRequest(key, value).ToBytes())
-}
-
-func writeDelRequest(writer io.Writer, key []byte) (int, error) {
-	return writer.Write(MakeDelRequest(key).ToBytes())
-}
-
 type ExpireRequest struct {
 	Key []byte
 	TTL int64
 }
 
-func MakeExpireRequest(key []byte, ttl int64) *ExpireRequest {
+func MakeExpireRequest(key string, ttl int64) *ExpireRequest {
 	return &ExpireRequest{
-		Key: key,
+		Key: utils.S2B(key),
 		TTL: ttl,
 	}
 }
@@ -77,6 +64,54 @@ func (req *ExpireRequest) ToBytes() []byte {
 	return MakeMultiBulkReply([][]byte{[]byte("EXPIRE"), req.Key, utils.I642B(req.TTL)}).ToBytes()
 }
 
-func writeExpireRequest(writer io.Writer, key []byte, ttl int64) (int, error) {
-	return writer.Write(MakeExpireRequest(key, ttl).ToBytes())
+type HSetRequest struct {
+	Key   []byte
+	Field []byte
+	Value []byte
+}
+
+func MakeHSetRequest(key, field, value string) *HSetRequest {
+	return &HSetRequest{
+		Key:   utils.S2B(key),
+		Field: utils.S2B(field),
+		Value: utils.S2B(value),
+	}
+}
+
+func (req *HSetRequest) ToBytes() []byte {
+	return MakeMultiBulkReply([][]byte{[]byte("HSET"), req.Key, req.Field, req.Value}).ToBytes()
+}
+
+type HGetRequest struct {
+	Key   []byte
+	Field []byte
+}
+
+func MakeHGetRequest(key, field string) *HGetRequest {
+	return &HGetRequest{
+		Key:   utils.S2B(key),
+		Field: utils.S2B(field),
+	}
+}
+
+func (req *HGetRequest) ToBytes() []byte {
+	return MakeMultiBulkReply([][]byte{[]byte("HGET"), req.Key, req.Field}).ToBytes()
+}
+
+type HDelRequest struct {
+	Key   []byte
+	Field []byte
+	Value []byte
+}
+
+func MakeHDelRequest(key, field, value string) *HDelRequest {
+	return &HDelRequest{
+		Key:   utils.S2B(key),
+		Field: utils.S2B(field),
+		Value: utils.S2B(value),
+	}
+}
+
+func (req *HDelRequest) ToBytes() []byte {
+	return MakeMultiBulkReply([][]byte{[]byte("HDEL"), req.Key, req.Field, req.Value}).ToBytes()
 }
